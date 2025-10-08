@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>เปิดกล้อง | Webcam App</title>
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0; padding: 30px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(120deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h2 {
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .video-container {
+      position: relative;
+      width: 90vw;
+      max-width: 600px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 25px rgba(255,255,255,0.4);
+      border: 6px solid rgba(255,255,255,0.3);
+      background: #222;
+    }
+
+    #video-stream {
+      width: 100%;
+      display: block;
+      transform: scaleX(-1);
+    }
+
+    .buttons {
+      margin-top: 30px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button, a.button {
+      padding: 14px 30px;
+      font-weight: 700;
+      font-size: 18px;
+      border: none;
+      border-radius: 30px;
+      color: white;
+      cursor: pointer;
+      background: linear-gradient(45deg, #ff6ec4, #7873f5);
+      box-shadow: 0 7px 18px rgba(255, 110, 196, 0.6);
+      transition: all 0.3s ease;
+      user-select: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
+    button:hover:not(:disabled), a.button:hover {
+      background: linear-gradient(45deg, #7873f5, #ff6ec4);
+      box-shadow: 0 10px 25px rgba(120, 115, 245, 0.8);
+      transform: translateY(-3px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      background: #666;
+    }
+
+    #record-indicator {
+      width: 20px;
+      height: 20px;
+      background: red;
+      border-radius: 50%;
+      box-shadow: 0 0 10px red;
+      animation: blink 1s infinite;
+      display: none;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    @media (max-width: 480px) {
+      h2 { font-size: 1.8rem; }
+      button, a.button { font-size: 16px; padding: 12px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <h2>กล้องของคุณ</h2>
+  <div class="video-container">
+    <img src="{{ url_for('video_feed') }}" id="video-stream" alt="Camera stream" />
+  </div>
+
+  <div class="buttons">
+    <button id="start-record-btn">เริ่มอัดวิดีโอ</button>
+    <button id="stop-record-btn" disabled>หยุดอัดวิดีโอ</button>
+    <div id="record-indicator" title="กำลังบันทึก..."></div>
+
+    <a href="{{ url_for('videos') }}" class="button" style="margin-left: 10px;">
+      ดูวิดีโอที่บันทึกไว้
+    </a>
+  </div>
+
+  <a href="{{ url_for('index') }}" class="button" style="margin-top: 30px;">← กลับหน้าโฮม</a>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const startBtn = document.getElementById('start-record-btn');
+    const stopBtn = document.getElementById('stop-record-btn');
+    const indicator = document.getElementById('record-indicator');
+
+    startBtn.onclick = async () => {
+      try {
+        const res = await fetch('/start_recording', { method: 'POST' });
+        if (res.ok) {
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
+          indicator.style.display = 'inline-block';
+          Swal.fire({
+            icon: 'success',
+            title: 'เริ่มบันทึกวิดีโอแล้ว',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          const data = await res.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'ผิดพลาด',
+            text: data.status
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ผิดพลาด',
+          text: error.message
+        });
+      }
+    };
+
+    stopBtn.onclick = async () => {
+      try {
+        const res = await fetch('/stop_recording', { method: 'POST' });
+        if (res.ok) {
+          stopBtn.disabled = true;
+          startBtn.disabled = false;
+          indicator.style.display = 'none';
+          Swal.fire({
+            icon: 'success',
+            title: 'หยุดบันทึกวิดีโอแล้ว',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          const data = await res.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'ผิดพลาด',
+            text: data.status
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'ผิดพลาด',
+          text: error.message
+        });
+      }
+    };
+  </script>
+</body>
+</html>

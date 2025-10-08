@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>อัปโหลดรูปภาพ | Webcam App</title>
+  <style>
+    body {
+      margin: 0; padding: 40px 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h2 {
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    form.upload-form {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 40px 30px;
+      border-radius: 25px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      width: 350px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 15px;
+      border: 2px dashed white;
+      border-radius: 20px;
+      background: transparent;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+    input[type="file"]:hover {
+      border-color: #ff6ec4;
+    }
+
+    button.upload-btn {
+      background: linear-gradient(45deg, #ff6ec4, #7873f5);
+      border: none;
+      padding: 15px 0;
+      width: 100%;
+      font-weight: 700;
+      font-size: 18px;
+      color: white;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(255, 110, 196, 0.7);
+      transition: background 0.3s ease, transform 0.3s ease;
+      user-select: none;
+      margin-bottom: 15px;
+    }
+    button.upload-btn:hover {
+      background: linear-gradient(45deg, #7873f5, #ff6ec4);
+      transform: translateY(-3px);
+    }
+
+    a.button {
+      margin-top: 15px;
+      color: white;
+      font-weight: 600;
+      text-decoration: none;
+      user-select: none;
+      font-size: 16px;
+      text-shadow: 0 0 6px rgba(0,0,0,0.5);
+    }
+
+    /* Gallery รูปที่อัปโหลด */
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .item {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      padding: 10px;
+      width: 150px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      position: relative;
+    }
+
+    .item img {
+      width: 100%;
+      height: 100px;
+      border-radius: 15px;
+      object-fit: cover;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    button.delete-btn {
+      background: #ff5e62;
+      border: none;
+      color: white;
+      font-weight: 700;
+      padding: 8px 15px;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(255, 94, 98, 0.7);
+      transition: background 0.3s ease;
+      width: 100%;
+      font-size: 14px;
+      user-select: none;
+    }
+    button.delete-btn:hover {
+      background: #ff2e44;
+    }
+
+    @media (max-width: 480px) {
+      form.upload-form { width: 90vw; }
+      h2 { font-size: 2rem; }
+      button.upload-btn { font-size: 16px; }
+      .item { width: 120px; }
+      .item img { height: 80px; }
+    }
+
+    /* ป็อปอัพแจ้งเตือน */
+    .popup {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: #333;
+      padding: 25px 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      z-index: 9999;
+      width: 320px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 18px;
+      animation: popupShow 0.4s ease forwards;
+    }
+    @keyframes popupShow {
+      from {opacity: 0; transform: translate(-50%, -60%) scale(0.8);}
+      to {opacity: 1; transform: translate(-50%, -50%) scale(1);}
+    }
+
+    .popup button {
+      margin-top: 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(102,126,234,0.6);
+      transition: background 0.3s ease;
+    }
+    .popup button:hover {
+      background: #5766d6;
+    }
+
+    /* ป็อปอัพ Gallery */
+    #galleryPopup {
+      display: none;
+      max-height: 80vh;
+      overflow-y: auto;
+      width: 90vw;
+      max-width: 800px;
+      color: black;
+      background: white;
+      padding: 20px 25px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10000;
+    }
+    #galleryPopup h3 {
+      margin-top: 0;
+      color: #333;
+      font-weight: 700;
+      text-align: center;
+    }
+    #galleryPopup .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      color: initial;
+    }
+    #galleryPopup .item {
+      width: 140px;
+      background: #f0f0f0;
+      border-radius: 15px;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #galleryPopup .item img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    #galleryPopup .delete-btn {
+      background: #ff5e62;
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 25px;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255,94,98,0.6);
+    }
+    #galleryPopup .delete-btn:hover {
+      background: #ff2e44;
+    }
+    #galleryPopup button.close-gallery-btn {
+      margin-top: 15px;
+      background: #667eea;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 5px 15px rgba(102,126,234,0.6);
+      transition: background 0.3s ease;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #galleryPopup button.close-gallery-btn:hover {
+      background: #5766d6;
+    }
+
+    /* ป็อปอัพยืนยันลบรูปทั้งหมด (custom) */
+    #deleteAllPopup {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>อัปโหลดรูปภาพ</h2>
+
+  <form action="{{ url_for('upload_image') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+    <input type="file" name="image_file" accept="image/*" required />
+    <button type="submit" class="upload-btn">อัปโหลด</button>
+    <!-- ปุ่มดูรูปทั้งหมด -->
+    <button type="button" class="upload-btn" onclick="openGalleryPopup()">ดูรูปทั้งหมด</button>
+  </form>
+
+  <a href="{{ url_for('index') }}" class="button">← กลับหน้าโฮม</a>
+
+  <!-- ป็อปอัพแจ้งเตือนอัปโหลดสำเร็จ -->
+  {% if request.args.get('success') == 'true' %}
+  <div class="popup" id="successPopup">
+    ✅ อัปโหลดสำเร็จ: {{ request.args.get('filename') }}
+    <br />
+    <button onclick="closePopup()">ปิด</button>
+  </div>
+  {% endif %}
+
+  <!-- ป็อปอัพยืนยันลบรูป -->
+  <div class="popup" id="deletePopup" style="display:none;">
+    <p>คุณต้องการลบรูปภาพนี้หรือไม่?</p>
+    <p id="popupFilename" style="font-weight: 700; margin: 10px 0;"></p>
+    <form id="deleteForm" method="POST" action="">
+      <button type="button" onclick="closeDeletePopup()" style="background:#999;">ยกเลิก</button>
+      <button type="submit" style="background:#ff5e62;">ลบเลย</button>
+    </form>
+  </div>
+
+  <!-- ป็อปอัพยืนยันลบรูปทั้งหมด (custom popup) -->
+  <div class="popup" id="deleteAllPopup" style="display:none;">
+    <p>คุณต้องการลบรูปทั้งหมดจริงหรือไม่?</p>
+    <p style="font-weight: 700; margin: 10px 0;">การกระทำนี้ไม่สามารถย้อนกลับได้!</p>
+    <form id="deleteAllConfirmForm" method="POST" action="{{ url_for('delete_all_images') }}">
+      <button type="button" onclick="closeDeleteAllPopup()" style="background:#999; margin-right: 10px;">ยกเลิก</button>
+      <button type="submit" style="background:#ff4444;">ลบเลย</button>
+    </form>
+  </div>
+
+  <!-- ฟอร์มลบรูปทั้งหมด (ซ่อน) -->
+  <form id="deleteAllForm" method="POST" action="{{ url_for('delete_all_images') }}" style="display:none;">
+    <!-- ใส่ข้อมูล token CSRF ถ้าต้องการ -->
+  </form>
+
+  <!-- ป็อปอัพ Gallery แสดงรูปทั้งหมด -->
+  <div class="popup" id="galleryPopup">
+    <h3>รูปภาพที่อัปโหลดทั้งหมด</h3>
+    <div class="gallery">
+      {% if images %}
+        {% for img in images %}
+          <div class="item">
+            <img src="{{ url_for('uploaded_file', filename=img) }}" alt="{{ img }}" />
+            <button class="delete-btn" onclick="confirmDeleteInGallery('{{ img }}')">ลบรูปนี้</button>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>ยังไม่มีรูปภาพที่อัปโหลด</p>
+      {% endif %}
+    </div>
+
+    <!-- ปุ่มลบทั้งหมด -->
+    {% if images %}
+      <button class="close-gallery-btn" style="background: #ff4444; margin-top: 15px;" onclick="openDeleteAllPopup()">ลบรูปทั้งหมด</button>
+    {% endif %}
+
+    <button class="close-gallery-btn" onclick="closeGalleryPopup()">ปิด</button>
+  </div>
+
+  <script>
+    // ปิด popup แจ้งเตือนอัปโหลด
+    function closePopup() {
+      const popup = document.getElementById('successPopup');
+      if (popup) {
+        popup.style.opacity = '0';
+        popup.style.transform = 'translate(-50%, -60%) scale(0.8)';
+        setTimeout(() => popup.remove(), 400);
+      }
+    }
+    // ปิด popup อัตโนมัติหลัง 4 วินาที
+    setTimeout(() => {
+      closePopup();
+    }, 4000);
+
+    // เปิดป็อปอัพ gallery แสดงรูปทั้งหมด
+    function openGalleryPopup() {
+      document.getElementById('galleryPopup').style.display = 'block';
+    }
+    // ปิดป็อปอัพ gallery
+    function closeGalleryPopup() {
+      document.getElementById('galleryPopup').style.display = 'none';
+    }
+
+    // ฟังก์ชัน confirmDelete ใช้สำหรับ popup ยืนยันลบรูปทีละรูป
+    function confirmDelete(filename) {
+      const popup = document.getElementById('deletePopup');
+      const popupFilename = document.getElementById('popupFilename');
+      const deleteForm = document.getElementById('deleteForm');
+
+      popupFilename.textContent = filename;
+      deleteForm.action = "{{ url_for('delete_image', filename='') }}" + filename;
+      popup.style.display = 'block';
+    }
+    // ปิด popup ยืนยันลบรูปทีละรูป
+    function closeDeletePopup() {
+      document.getElementById('deletePopup').style.display = 'none';
+    }
+
+    // ฟังก์ชันเรียก confirmDelete จากใน popup gallery พร้อมปิด popup gallery ก่อน
+    function confirmDeleteInGallery(filename) {
+      closeGalleryPopup();
+      confirmDelete(filename);
+    }
+
+    // เปิด popup ยืนยันลบรูปทั้งหมด
+    function openDeleteAllPopup() {
+      closeGalleryPopup();
+      document.getElementById('deleteAllPopup').style.display = 'block';
+    }
+    // ปิด popup ยืนยันลบรูปทั้งหมด
+    function closeDeleteAllPopup() {
+      document.getElementById('deleteAllPopup').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

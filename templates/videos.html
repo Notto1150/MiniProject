@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>วิดีโอที่บันทึก | Webcam App</title>
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0; padding: 30px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(120deg, #667eea, #764ba2);
+      color: white;
+      min-height: 100vh;
+    }
+
+    h2 {
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 25px;
+      text-align: center;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    .video-list {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .video-item {
+      background: #222;
+      padding: 15px 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .video-info {
+      flex-grow: 1;
+      min-width: 200px;
+      overflow-wrap: break-word;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .video-info .filename {
+      font-size: 1.1rem;
+      color: #f0f0f0;
+    }
+
+    .video-info .time {
+      font-size: 0.85rem;
+      color: #bbb;
+      font-weight: 400;
+    }
+
+    video {
+      max-width: 300px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+      background: black;
+      height: auto;
+    }
+
+    form {
+      margin: 0;
+    }
+
+    button.delete-btn {
+      background: linear-gradient(45deg, #ff6ec4, #7873f5);
+      border: none;
+      border-radius: 30px;
+      padding: 10px 20px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 7px 18px rgba(255, 110, 196, 0.6);
+      user-select: none;
+    }
+
+    button.delete-btn:hover {
+      background: linear-gradient(45deg, #7873f5, #ff6ec4);
+      box-shadow: 0 10px 25px rgba(120, 115, 245, 0.8);
+      transform: translateY(-3px);
+    }
+
+    a.button {
+      display: inline-block;
+      margin-top: 35px;
+      background: linear-gradient(45deg, #ff6ec4, #7873f5);
+      color: white;
+      padding: 14px 30px;
+      border-radius: 30px;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 7px 18px rgba(255, 110, 196, 0.6);
+      transition: all 0.3s ease;
+      user-select: none;
+      text-align: center;
+    }
+
+    a.button:hover {
+      background: linear-gradient(45deg, #7873f5, #ff6ec4);
+      box-shadow: 0 10px 25px rgba(120, 115, 245, 0.8);
+      transform: translateY(-3px);
+    }
+
+    @media (max-width: 600px) {
+      .video-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      video {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>วิดีโอที่บันทึกไว้</h2>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          Swal.fire({
+            icon: 'success',
+            title: '{{ messages[0] }}',
+            timer: 1800,
+            showConfirmButton: false
+          });
+        });
+      </script>
+    {% endif %}
+  {% endwith %}
+
+  <div class="video-list">
+    {% if videos|length == 0 %}
+      <p style="text-align: center; font-weight: 600; font-size: 1.2rem;">ยังไม่มีวิดีโอที่บันทึกไว้</p>
+    {% else %}
+      {% for video in videos %}
+        <div class="video-item">
+          <div class="video-info">
+            <div class="filename">{{ video.filename }}</div>
+            <div class="time">บันทึกเมื่อ: {{ video.time }}</div>
+          </div>
+          <video src="{{ url_for('video_file', filename=video.filename) }}" controls preload="metadata"></video>
+          <form action="{{ url_for('delete_video', filename=video.filename) }}" method="POST" onsubmit="return confirm('คุณแน่ใจว่าจะลบวิดีโอนี้หรือไม่?');">
+            <button type="submit" class="delete-btn">ลบวิดีโอ</button>
+          </form>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <a href="{{ url_for('camera') }}" class="button">← กลับไปหน้าเปิดกล้อง</a>
+
+</body>
+</html>
