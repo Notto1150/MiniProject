@@ -6,10 +6,9 @@ authors = ["Your Name <you@example.com>"] # 👤 ชื่อและอีเ�
 license = "MIT" # 📜 ใบอนุญาต เช่น MIT, GPL, หรือ Proprietary
 
 [tool.poetry.dependencies]
-python = "^3.10" # 🎯 เวอร์ชัน Python ขั้นต่ำที่โปรเจกต์คุณรองรับ (Render ใช้ 3.13.4 ตาม Log ก่อนหน้า, คุณควรตั้งค่าให้เข้ากัน)
-# ⚙️ Dependencies หลักสำหรับรัน Production
-# นี่คือส่วนที่คุณต้องใส่ Web Server (Gunicorn) และ Framework ของคุณ
-gunicorn = "^21.2.0" # Web Server ที่ Render ต้องการ
+python = "^3.13" 
+gunicorn = "^21.2.0"
+opencv-python-headless = "^4.9.0"
 flask = "^2.3.3" # หรือ django, fastapi, etc.
 python-dotenv = "^1.0.1" # สำหรับจัดการ Environment Variables
 
