@@ -23,10 +23,11 @@ from email.mime.image import MIMEImage
 app = Flask(__name__)
 app.secret_key = 'your_super_secure_secret_key' 
 
-# --- การตั้งค่าโฟลเดอร์ ---
-UPLOAD_FOLDER = 'E:/AppServ/www/image'
-VIDEO_FOLDER = 'E:/AppServ/www/Cam'
-UNKNOWN_FOLDER = 'E:/AppServ/www/Unkown'
+# 🛠️ จุดที่ 1: แก้ไขพาธโฟลเดอร์ให้ใช้พาธสัมพัทธ์ (Relative Paths)
+# Render จะสร้างโฟลเดอร์เหล่านี้ใน Root Directory ของโปรเจกต์
+UPLOAD_FOLDER = 'image'
+VIDEO_FOLDER = 'Cam'
+UNKNOWN_FOLDER = 'Unkown'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(VIDEO_FOLDER, exist_ok=True)
 os.makedirs(UNKNOWN_FOLDER, exist_ok=True)
@@ -160,7 +161,7 @@ def detect_and_recognize_faces(frame, threshold=FACE_RECOGNITION_THRESHOLD, save
                         for f in unknown_files:
                             try: os.remove(os.path.join(UNKNOWN_FOLDER, f))
                             except Exception as e: print(f"Error deleting old unknown file {f}: {e}")
-                    
+                            
                     face_bgr_crop = frame[y:y+h, x:x+w] 
                     
                     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
@@ -207,13 +208,17 @@ def draw_detections(frame, detections):
         cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
         put_flipped_text(frame, label, x, y - 10, color=color)
 
-# เปิดกล้อง (ไม่เปลี่ยนแปลง)
-cap = cv2.VideoCapture(0)
+# 🛠️ จุดที่ 2: แก้ไขการเปิดกล้องให้ใช้ไฟล์วิดีโอ (สมมติชื่อไฟล์คือ 'my_video.mp4')
+VIDEO_SOURCE = 'my_video.mp4' # 🟢 เปลี่ยนชื่อไฟล์วิดีโอของคุณที่นี่
+
+cap = cv2.VideoCapture(VIDEO_SOURCE)
 if not cap.isOpened():
-    print("❌ ERROR: Failed to open camera with index 0. Trying index 1...")
-    cap = cv2.VideoCapture(1)
-if not cap.isOpened():
-    print("❌ FATAL ERROR: Cannot open any camera.")
+    print(f"❌ FATAL ERROR: Cannot open video source: {VIDEO_SOURCE}")
+    
+    # หากเปิดไฟล์ไม่ได้ ให้ลองใช้กล้อง 0 (เผื่อรันบนเครื่องตัวเอง) แต่จะไม่ทำซ้ำหลายครั้ง
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("❌ FATAL ERROR: Cannot open any source.")
 
 # ... (ส่วนอื่น ๆ ของ Flask routes และ functions ที่ไม่เกี่ยวข้องกับการประมวลผลวิดีโอ/อีเมล) ...
 
@@ -243,6 +248,8 @@ def record_video():
         recording = False 
         return
         
+    # เมื่อใช้ไฟล์วิดีโอเป็นแหล่งข้อมูล (cap) จะไม่สามารถเขียนวิดีโอได้ต่อ
+    # แต่ถ้าเป็นกล้องจริงจะทำงานได้ 
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     
@@ -261,7 +268,7 @@ def record_video():
     while recording:
         ret, frame = cap.read()
         if not ret:
-            print("Error: Failed to read frame for recording.")
+            print("Error: Failed to read frame for recording. Ending loop.")
             break
         frame = cv2.flip(frame, 1) 
         out.write(frame)
@@ -439,7 +446,9 @@ def video_feed():
         while True:
             ret, frame = cap.read()
             if not ret:
-                break
+                # เมื่อวิดีโอเล่นจบ ให้กลับไปเริ่มต้นใหม่
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                continue
                 
             frame_width = frame.shape[1]
             
@@ -458,7 +467,7 @@ def video_feed():
                 detections = []
                 for x, y, w, h, label in detections_resized:
                     x_full = int(x * scale_x)
-                    y_full = int(y * scale_y)
+                    y_full = int(y * scale_x)
                     w_full = int(w * scale_x)
                     h_full = int(h * scale_y)
                     detections.append((x_full, y_full, w_full, h_full, label))
@@ -562,6 +571,8 @@ monitor_thread.start()
 
 if __name__ == '__main__':
     
+    # ⚠️ เมื่อรันบน Gunicorn ใน Render เราจะตั้งค่า Port ใน Start Command 
+    # โค้ดนี้ใช้เมื่อรัน local เท่านั้น
     try:
         app.run(host='0.0.0.0', port=5000, debug=True, threaded=True, use_reloader=False) 
     except KeyboardInterrupt:
