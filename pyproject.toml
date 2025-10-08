@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "A simple web application deployed on Render." # 📝 คำอธิบายสั้นๆ
 authors = ["Your Name <you@example.com>"] # 👤 ชื่อและอีเมลของคุณ
 license = "MIT" # 📜 ใบอนุญาต เช่น MIT, GPL, หรือ Proprietary
-readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10" # 🎯 เวอร์ชัน Python ขั้นต่ำที่โปรเจกต์คุณรองรับ (Render ใช้ 3.13.4 ตาม Log ก่อนหน้า, คุณควรตั้งค่าให้เข้ากัน)
