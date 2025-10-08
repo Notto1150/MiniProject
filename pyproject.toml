@@ -8,6 +8,7 @@ license = "MIT" # 📜 ใบอนุญาต เช่น MIT, GPL, หรื
 [tool.poetry.dependencies]
 python = "^3.13" 
 gunicorn = "^21.2.0"
+scipy = "^1.11.3"
 opencv-python-headless = "^4.9.0"
 flask = "^2.3.3" # หรือ django, fastapi, etc.
 python-dotenv = "^1.0.1" # สำหรับจัดการ Environment Variables
